@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
+    <metadata>
+        <id>Xbim.Analysis</id>
+        <version>3.0.3-Prerelease</version>
+        <title>xBIM Analysis</title>
+        <authors>xBIM team</authors>
+        <owners>Steve Lockley</owners>
+        <licenseUrl>http://xbim.codeplex.com/license</licenseUrl>
+        <projectUrl>http://xbim.codeplex.com/</projectUrl>
+        <iconUrl>http://download-codeplex.sec.s-msft.com/Download?ProjectName=xbim&amp;DownloadId=373774&amp;Build=20335</iconUrl>
+        <requireLicenseAcceptance>true</requireLicenseAcceptance>
+        <description>xBIM Analysis allows comparison and differencing of IFC based data.
+xBIM is an Open Source Toolkit for developing IFC based applications (BuildingSmart Data model). 
+It provides full support for reading and writing geometry, topology and data in accordance with the Ifc2x3 schema.
+xBIM reads and writes Ifc, IfcXMl and IfcZip formats.
+The xBIM project provides packages to convert IFC models to COBie spreadsheets in both UK and US cultures as well as a range of 3D viewing controls for use with Windows forms, WPF, WEBGL and OpenGL platforms.
+IOS and Android versions are under development.</description>
+        <summary>The .Net toolkit for developing BIM applications based on the IFC standard. Essential support for the Ifc data model</summary>
+        <releaseNotes>3.0 contains an implementation of the COBieLite protocol as weel as the COBieLite Spreadsheet format.</releaseNotes>
+        <language>en-GB</language>
+      <tags>BIM, IFC, IfcXml, IfcZip, .Net, C#, BuildingSmart</tags>
+      <dependencies>
+        <dependency id="NPOI" version="2.1.3" />
+        <dependency id="Xbim.Geometry" version="3.0.3-Prerelease" />
+      </dependencies>
+    </metadata>
+    <files>
+      <file src="Output\Release\Xbim.Analysis.dll" target="lib\net45\Xbim.Analysis.dll" />
+    </files>
+
+  </package>
