@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
     <metadata>
         <id>Xbim.Analysis</id>
-        <version>3.0.3-Prerelease</version>
+        <version>3.0.4-Prerelease</version>
         <title>xBIM Analysis</title>
         <authors>xBIM team</authors>
         <owners>Steve Lockley</owners>
@@ -27,6 +27,7 @@ IOS and Android versions are under development.</description>
     </metadata>
     <files>
       <file src="Output\Release\Xbim.Analysis.dll" target="lib\net45\Xbim.Analysis.dll" />
+      <file src="Output\Release\Xbim.Analysis.pdb" target="lib\net45\Xbim.Analysis.pdb" />
     </files>
 
   </package>
