@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
     <metadata>
         <id>Xbim.Analysis</id>
-        <version>3.0.4-Prerelease</version>
+        <version>3.1.0-Prerelease</version>
         <title>xBIM Analysis</title>
         <authors>xBIM team</authors>
         <owners>Steve Lockley</owners>
@@ -22,7 +22,7 @@ IOS and Android versions are under development.</description>
       <tags>BIM, IFC, IfcXml, IfcZip, .Net, C#, BuildingSmart</tags>
       <dependencies>
         <dependency id="NPOI" version="2.1.3" />
-        <dependency id="Xbim.Geometry" version="3.0.3-Prerelease" />
+        <dependency id="Xbim.Geometry" version="3.1.0" />
       </dependencies>
     </metadata>
     <files>
