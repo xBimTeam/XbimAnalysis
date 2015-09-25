@@ -86,63 +86,32 @@ namespace Xbim.Analysis
         public int ConnectedFromKey;
         public int ContainedInStructureKey;
 
-        public IfcElementSignature(IfcElement elem)
+        public IfcElementSignature(IfcElement elem, Xbim3DModelContext geometryContext)
         {
             XbimMatrix3D m3D = XbimMatrix3D.Identity;
             if(elem.ObjectPlacement !=null) m3D = elem.ObjectPlacement.ToMatrix3D();
-
+            var geomManager = elem.ModelOf.GeometryManager;
+            
             ShapeId = 0;
             //get the 3D shape
-            if (elem.Representation != null)
+            var shapes = geometryContext.ShapeInstancesOf(elem);
+            if (shapes.Any())
             {
-                IEnumerable<IfcRepresentation> rep3Ds = elem.Representation.Representations.Where(r => String.Compare(r.ContextOfItems.ContextType, "Model", true) == 0 &&
-                                                                                         String.Compare(r.ContextOfItems.ContextIdentifier, "Body", true) == 0);
-                //if this failed then slacken off and just use the body
-                if (!rep3Ds.Any())
-                    rep3Ds = elem.Representation.Representations.Where(r => String.Compare(r.ContextOfItems.ContextType, "Model", true) == 0);
-
-                //get the geometry hashcode
-
-                if (rep3Ds.Any())
+                XbimRect3D r3D = XbimRect3D.Empty;
+                foreach (var shape in shapes)
                 {
-                    XbimRect3D r3D = XbimRect3D.Empty;
-                    foreach (var rep in rep3Ds.SelectMany(i=>i.Items))
-                    {
-                        if (rep is IfcMappedItem)
-                        {
-                            IfcMappedItem map = rep as IfcMappedItem;
-                            XbimMatrix3D cartesianTransform = map.MappingTarget.ToMatrix3D();
-                            XbimMatrix3D localTransform = map.MappingSource.MappingOrigin.ToMatrix3D();
-                            XbimMatrix3D mapTransform = XbimMatrix3D.Multiply(cartesianTransform, localTransform);
-                            m3D = XbimMatrix3D.Multiply(mapTransform, m3D);
-                            ShapeId ^= map.MappingSource.MappedRepresentation.GetGeometryHashCode();
-                            IXbimGeometryModel geom = rep.Geometry3D();
-                            if (r3D.IsEmpty) 
-                                r3D = geom.GetBoundingBox();
-                            else
-                                r3D.Union(geom.GetBoundingBox());
-                        }
-                        else if (rep is IfcSolidModel || rep is IfcBooleanResult || rep is IfcFaceBasedSurfaceModel)
-                        {
-                            ShapeId ^= rep.GetGeometryHashCode();
-                            IXbimGeometryModel geom = rep.Geometry3D();
-                            if (r3D.IsEmpty)
-                                r3D = geom.GetBoundingBox();
-                            else
-                                r3D.Union(geom.GetBoundingBox());
-                        }
-                        else
-                            Debug.WriteLine("Unhandled geometry type " + rep.GetType().Name);
-                           // throw new Exception("Unhandled geometry type " + rep.GetType().Name);
-                    }
-                    XbimPoint3D p3D = r3D.Centroid();
-                    p3D = m3D.Transform(p3D);
-                    BoundingSphereRadius = r3D.Length() / 2;
-                    CentroidX = p3D.X;
-                    CentroidY = p3D.Y;
-                    CentroidZ = p3D.Z;
-                    
+                    if (r3D.IsEmpty)
+                        r3D = shape.BoundingBox;
+                    else
+                        r3D.Union(shape.BoundingBox);
+
                 }
+                XbimPoint3D p3D = r3D.Centroid();
+                p3D = m3D.Transform(p3D);
+                BoundingSphereRadius = r3D.Length() / 2;
+                CentroidX = p3D.X;
+                CentroidY = p3D.Y;
+                CentroidZ = p3D.Z;
             }
             //get the defining type
             IfcTypeObject ot = elem.GetDefiningType();

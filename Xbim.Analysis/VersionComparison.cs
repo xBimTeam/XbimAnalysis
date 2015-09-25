@@ -35,7 +35,7 @@ namespace Xbim.Analysis
         {
             Baseline = baseline;
             Revision = revision;
-
+            
             Int32 ret = 0;
             if (filter == "")
             {
