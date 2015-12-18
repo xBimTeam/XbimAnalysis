@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Xbim.Ifc2x3.IO;
 using Xbim.Ifc2x3.Kernel;
-using Xbim.IO;
-using Xbim.XbimExtensions.SelectTypes;
+using Xbim.Ifc2x3.MeasureResource;
 
 namespace Xbim.Analysis.Comparing
 {

@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Xbim.Ifc2x3.Extensions;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.ModelGeometry.Scene;
-using Xbim.Ifc2x3.RepresentationResource;
 using Xbim.Common.Geometry;
+using Xbim.Ifc2x3.Extensions;
 using Xbim.Ifc2x3.GeometryResource;
-using Xbim.Ifc2x3.GeometricModelResource;
-using System.Diagnostics;
+using Xbim.Ifc2x3.IO;
 using Xbim.Ifc2x3.Kernel;
-using Xbim.XbimExtensions.SelectTypes;
+using Xbim.Ifc2x3.MaterialResource;
+using Xbim.Ifc2x3.ProductExtension;
 using Xbim.Ifc2x3.PropertyResource;
+using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Analysis
 {
@@ -90,7 +87,7 @@ namespace Xbim.Analysis
         {
             XbimMatrix3D m3D = XbimMatrix3D.Identity;
             if(elem.ObjectPlacement !=null) m3D = elem.ObjectPlacement.ToMatrix3D();
-            var geomManager = elem.ModelOf.GeometryManager;
+            var geomManager = (elem.Model as XbimModel).GeometryManager;
             
             ShapeId = 0;
             //get the 3D shape
@@ -117,7 +114,7 @@ namespace Xbim.Analysis
             IfcTypeObject ot = elem.GetDefiningType();
             IfcMaterialSelect material = elem.GetMaterial();
             //sort out property definitions
-            List<IfcPropertySet> psets = elem.GetAllPropertySets();
+            var psets = elem.PropertySets.ToList();
             PropertyCount = psets.SelectMany(p => p.HasProperties).Count();
             psets.Sort(new PropertySetNameComparer());
             foreach (var pset in psets)
@@ -137,7 +134,7 @@ namespace Xbim.Analysis
             }
             ModelID =elem.EntityLabel;
             SchemaType = elem.GetType().Name;
-            DefinedTypeId = (ot == null ? "" : ot.GlobalId.ToPart21);
+            DefinedTypeId = (ot == null ? "" : ot.ToPart21);
             GlobalId = elem.GlobalId;
             OwningUser = elem.OwnerHistory.LastModifyingUser != null ? elem.OwnerHistory.LastModifyingUser.ToString() : elem.OwnerHistory.OwningUser.ToString();
             Name = elem.Name ?? "";

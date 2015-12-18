@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.Extensions;
-using Xbim.Ifc2x3.MaterialResource;
-using Xbim.Ifc2x3.PropertyResource;
-using Xbim.XbimExtensions.Interfaces;
 using Xbim.Analysis.Extensions;
+using Xbim.Common;
+using Xbim.Ifc2x3.Extensions;
+using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc2x3.PropertyResource;
 
 namespace Xbim.Analysis.Comparing
 {
@@ -132,10 +130,10 @@ namespace Xbim.Analysis.Comparing
                 IEnumerable<IfcPropertySet> pSets = null;
                 var o = objDef as IfcObject;
                 if (o != null)
-                    pSets = o.GetAllPropertySets();
+                    pSets = o.PropertySets;
                 var t = objDef as IfcTypeObject;
                 if (t != null)
-                    pSets = t.GetAllPropertySets();
+                    pSets = t.PropertySets;
 
                 _hash = 0;
                 foreach (var pSet in pSets)
@@ -211,16 +209,16 @@ namespace Xbim.Analysis.Comparing
                 var o1 = _objDef as IfcObject;
                 if (o2 != null && o1 != null)
                 {
-                    set1 = o1.GetAllPropertySets();
-                    set2 = o2.GetAllPropertySets();
+                    set1 = o1.PropertySets;
+                    set2 = o2.PropertySets;
                 }
 
                 var t1 = _objDef as IfcTypeObject;
                 var t2 = objDef._objDef as IfcTypeObject;
                 if (t1 != null && t2 != null)
                 {
-                    set1 = t1.GetAllPropertySets();
-                    set2 = t2.GetAllPropertySets();
+                    set1 = t1.PropertySets;
+                    set2 = t2.PropertySets;
                 }
 
                 if (set1 != null && set2 != null)
