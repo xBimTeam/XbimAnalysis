@@ -4,6 +4,7 @@ using System.Linq;
 using Xbim.Analysis.Extensions;
 using Xbim.Common;
 using Xbim.Ifc2x3.Extensions;
+using Xbim.Ifc2x3.IO;
 using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.PropertyResource;
 
@@ -15,7 +16,7 @@ namespace Xbim.Analysis.Comparing
         List<PropertyHashedObjectDefinition> _cacheBase;
         List<PropertyHashedObjectDefinition> _cacheRevision;
 
-        public PropertyComparer(IModel baseline, IModel revision)
+        public PropertyComparer(XbimModel baseline, XbimModel revision)
         {
             if (revision == null || baseline == null)
                 throw new ArgumentNullException();
@@ -55,7 +56,7 @@ namespace Xbim.Analysis.Comparing
         }
 
         private List<IfcRoot> _processed = new List<IfcRoot>();
-        public ComparisonResult Compare<T>(T baseline, IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        public ComparisonResult Compare<T>(T baseline, XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
         {
             var baseModel = baseline.ModelOf;
             if (baseModel == revisedModel)
@@ -83,7 +84,7 @@ namespace Xbim.Analysis.Comparing
             return result;
         }
 
-        public ComparisonResult GetResidualsFromRevision<T>(IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        public ComparisonResult GetResidualsFromRevision<T>(XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
         {
             var result = new ComparisonResult(null, this);
             var isInCache = new Func<IfcRoot, bool>(r => { return _cacheRevision.Where(c => c.IfcObjectDefinition == r).FirstOrDefault() != null; });
@@ -93,7 +94,7 @@ namespace Xbim.Analysis.Comparing
         }
 
 
-        public IEnumerable<ComparisonResult> Compare<T>(IO.XbimModel baseline, IO.XbimModel revised) where T : Ifc2x3.Kernel.IfcRoot
+        public IEnumerable<ComparisonResult> Compare<T>(XbimModel baseline, XbimModel revised) where T : Ifc2x3.Kernel.IfcRoot
         {
             foreach (var b in baseline.Instances.OfType<T>())
             {

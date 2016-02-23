@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Xbim.Analysis.Extensions;
-using Xbim.Ifc2x3.Extensions;
+using Xbim.Ifc2x3.IO;
 using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.MaterialResource;
-using Xbim.IO;
 
 namespace Xbim.Analysis.Comparing
 {

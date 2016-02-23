@@ -168,7 +168,7 @@ namespace Xbim.Analysis.Comparing
         }
 
 
-        public ComparisonResult Compare<T>(T baseline, IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        public ComparisonResult Compare<T>(T baseline, XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
         {
             var product = baseline as IfcProduct;
             
@@ -201,7 +201,7 @@ namespace Xbim.Analysis.Comparing
             return result;
         }
 
-        public ComparisonResult GetResidualsFromRevision<T>(IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        public ComparisonResult GetResidualsFromRevision<T>(XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
         {
             var result = new ComparisonResult(null, this);
             var prods = _prodBBsB.Keys.Where(p => !_processedFromB.Contains(p) && typeof(T).IsAssignableFrom(p.GetType()));
@@ -209,7 +209,7 @@ namespace Xbim.Analysis.Comparing
             return result;
         }
 
-        public IEnumerable<ComparisonResult> Compare<T>(IO.XbimModel baseline, IO.XbimModel revised) where T : Ifc2x3.Kernel.IfcRoot
+        public IEnumerable<ComparisonResult> Compare<T>(XbimModel baseline, XbimModel revised) where T : Ifc2x3.Kernel.IfcRoot
         {
             foreach (var b in baseline.Instances.OfType<T>())
             {

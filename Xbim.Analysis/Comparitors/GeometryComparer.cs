@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Xbim.Common.Geometry;
-using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc4.Interfaces;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Analysis.Comparitors
 {
     public class GeometryComparer : IModelComparer
     {
-        public Dictionary<IfcRoot, ChangeType> Compare(IEnumerable<IfcRoot> Baseline, IEnumerable<IfcRoot> Delta)
+        public Dictionary<IIfcRoot, ChangeType> Compare(IEnumerable<IIfcRoot> Baseline, IEnumerable<IIfcRoot> Delta)
         {
             throw new NotImplementedException(); //need to do this
         }
@@ -18,14 +15,14 @@ namespace Xbim.Analysis.Comparitors
         private Dictionary<Int32, Int32> map = new Dictionary<Int32, Int32>();
         public Dictionary<Int32, Int32> GetMap() { return map; }
 
-        public Dictionary<IfcRoot, ChangeType> Compare(Xbim3DModelContext baseContext, Xbim3DModelContext revisionContext, double oneMillimetre)
+        public Dictionary<IIfcRoot, ChangeType> Compare(Xbim3DModelContext baseContext, Xbim3DModelContext revisionContext, double oneMillimetre)
         {
-            Dictionary<IfcRoot, ChangeType> changes = new Dictionary<IfcRoot, ChangeType>();
+            Dictionary<IIfcRoot, ChangeType> changes = new Dictionary<IIfcRoot, ChangeType>();
             //Martin I have messed this function comletely
             //List<XbimShapeInstance> baseShapes = baseContext.ShapeInstances().ToList();
             //List<XbimShapeInstance> revisedShapes = revisionContext.ShapeInstances().ToList();
             ////Create our dictionary for return
-            //Dictionary<IfcRoot, ChangeType> changes = new Dictionary<IfcRoot, ChangeType>();
+            //Dictionary<IIfcRoot, ChangeType> changes = new Dictionary<IIfcRoot, ChangeType>();
 
             ////check intersections of boounding boxes
             ////below code is mock and will be replaced by octree

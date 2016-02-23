@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Analysis.Comparitors
 {
@@ -11,12 +10,12 @@ namespace Xbim.Analysis.Comparitors
         private Dictionary<Int32, Int32> map = new Dictionary<Int32, Int32>();
         public Dictionary<Int32, Int32> GetMap() { return map; }
 
-        public Dictionary<IfcRoot, ChangeType> Compare(IEnumerable<IfcRoot> Baseline, IEnumerable<IfcRoot> Delta)
+        public Dictionary<IIfcRoot, ChangeType> Compare(IEnumerable<IIfcRoot> Baseline, IEnumerable<IIfcRoot> Delta)
         {
             results.Clear();
 
-            var baseline = new List<IfcRoot>(Baseline);
-            var delta = new List<IfcRoot>(Delta);
+            var baseline = new List<IIfcRoot>(Baseline);
+            var delta = new List<IIfcRoot>(Delta);
 
             Match(baseline, delta);
             Match(delta, baseline, false);
@@ -40,10 +39,10 @@ namespace Xbim.Analysis.Comparitors
 
             return results;
         }
-        private Dictionary<IfcRoot, ChangeType> results = new Dictionary<IfcRoot, ChangeType>();
-        private void Match(List<IfcRoot> start, List<IfcRoot> delta, bool ReturnMappingFromBaseline=true)
+        private Dictionary<IIfcRoot, ChangeType> results = new Dictionary<IIfcRoot, ChangeType>();
+        private void Match(List<IIfcRoot> start, List<IIfcRoot> delta, bool ReturnMappingFromBaseline=true)
         {
-            var collection = new List<IfcRoot>(start);
+            var collection = new List<IIfcRoot>(start);
             foreach (var i in collection)
             {
                 var b = delta.Where(x => x.Name == i.Name && x.GetType() == i .GetType());

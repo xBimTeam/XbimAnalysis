@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Xbim.Ifc2x3.IO;
 using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.MeasureResource;
 
 namespace Xbim.Analysis.Comparing
 {
@@ -89,7 +88,7 @@ namespace Xbim.Analysis.Comparing
         }
 
         private HashSet<IfcRoot> _processed = new HashSet<IfcRoot>();
-        public ComparisonResult Compare<T>(T baseline, IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        public ComparisonResult Compare<T>(T baseline, XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
         {
             if (!_possibleTypes.Contains(typeof(T))) 
                 return null;
@@ -107,7 +106,7 @@ namespace Xbim.Analysis.Comparing
             return result;
         }
 
-        public ComparisonResult GetResidualsFromRevision<T>(IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        public ComparisonResult GetResidualsFromRevision<T>(XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
         {
             var result = new ComparisonResult(null, this);
             var isNotProcessed = new Func<IfcRoot, bool>(r => { return !_processed.Contains(r); });
@@ -116,7 +115,7 @@ namespace Xbim.Analysis.Comparing
             return result;
         }
 
-        public IEnumerable<ComparisonResult> Compare<T>(IO.XbimModel baseline, IO.XbimModel revised) where T : Ifc2x3.Kernel.IfcRoot
+        public IEnumerable<ComparisonResult> Compare<T>(XbimModel baseline, XbimModel revised) where T : Ifc2x3.Kernel.IfcRoot
         {
             foreach (var b in baseline.Instances.OfType<T>())
             {

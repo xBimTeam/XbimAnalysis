@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Xbim.Ifc2x3.IO;
 using Xbim.Ifc2x3.Kernel;
-using Xbim.IO;
 
 namespace Xbim.Analysis.Comparing
 {
