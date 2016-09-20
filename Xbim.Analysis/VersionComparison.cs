@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Xbim.Analysis.Comparitors;
 using Xbim.Ifc2x3.Kernel;
 using Xbim.Ifc2x3.ProductExtension;
+using Xbim.Ifc2x3.UtilityResource;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 using Xbim.XbimExtensions.Interfaces;
@@ -17,8 +18,8 @@ namespace Xbim.Analysis
     {
         private XbimModel Baseline { get; set; }
         private XbimModel Revision { get; set; }
-        private List<IfcRoot> WorkingCopyBaseline = new List<IfcRoot>();
-        private List<IfcRoot> WorkingCopyDelta = new List<IfcRoot>();
+        private List<IfcRoot> WorkingCopyBaseline;
+        private List<IfcRoot> WorkingCopyDelta;
 
         public event MessageCallback OnMessage;
         private void Message(String message)
@@ -30,19 +31,34 @@ namespace Xbim.Analysis
         public Dictionary<Int32, Int32> EntityMapping = new Dictionary<Int32, Int32>();
         public List<IfcRoot> Deleted = new List<IfcRoot>();
         public List<IfcRoot> Added = new List<IfcRoot>();
+        public List<IfcGloballyUniqueId> DuplicateBaseItems = new List<IfcGloballyUniqueId>();
 
         public Int32 StartComparison(XbimModel baseline, XbimModel revision, string filter = "")
         {
+
             Baseline = baseline;
             Revision = revision;
-            
+
             Int32 ret = 0;
             if (filter == "")
             {
                 // default behaviour (maintained during code review) is to test only for IfcProducts
                 //
-                WorkingCopyBaseline = new List<IfcRoot>(Baseline.Instances.OfType<IfcProduct>().Cast<IfcRoot>());
-                WorkingCopyDelta = new List<IfcRoot>(Revision.Instances.OfType<IfcProduct>().Cast<IfcRoot>());
+                WorkingCopyBaseline = Baseline.Instances.OfType<IfcProduct>().ToList<IfcRoot>();
+                WorkingCopyDelta = Revision.Instances.OfType<IfcProduct>().ToList<IfcRoot>();
+
+                //get guids into dictionary
+                var MyTemp = WorkingCopyBaseline.Select(p => new baselineitem { GUID = p.GlobalId, Label = p.EntityLabel, Name = p.Name, MyType = p.GetType() }).ToList();
+
+                //list duplicate Guids in Model
+                DuplicateBaseItems.AddRange(MyTemp.GroupBy(k => k.GUID).Where(g => g.Count() > 1).Select(g => g.Key));
+                if (DuplicateBaseItems.Count > 0)
+                {
+                    Message(String.Format("Warning {0} Duplicate Guids found in Model", DuplicateBaseItems.Count));
+                }
+                var comparer = new VersionGuidComparitor();
+                var MyDictionary = MyTemp.Distinct<baselineitem>(comparer).ToDictionary(k => k.GUID, v => v); //think GroupBy?
+
                 ret += StartProductsComparison();
             }
             else
@@ -78,7 +94,7 @@ namespace Xbim.Analysis
             Deleted.AddRange(WorkingCopyBaseline);
             Added.AddRange(WorkingCopyDelta);
 
-            Message(String.Format("All Checks Complete. {0} items unresolved", WorkingCopyBaseline.Count+WorkingCopyDelta.Count));
+            Message(String.Format("All Checks Complete. {0} items unresolved", WorkingCopyBaseline.Count + WorkingCopyDelta.Count));
             if (WorkingCopyBaseline.Count > 0)
             {
                 Message("Cannot resolve Baseline item(s):");
@@ -93,7 +109,7 @@ namespace Xbim.Analysis
                     Message(String.Format("Cannot resolve Added GUID: {0} (EntityLabel: {1})", i.GlobalId, i.EntityLabel));
                 }
             }
-            
+
             Message("Map from Entity Labels is as follows (Baseline -> Delta)");
             foreach (var key in EntityMapping)
             {
@@ -105,7 +121,7 @@ namespace Xbim.Analysis
 
         private bool ItemsNeedMatching()
         {
-            return 
+            return
                 (WorkingCopyDelta != null && WorkingCopyDelta.Count > 0)
                 &&
                 (WorkingCopyBaseline != null && WorkingCopyBaseline.Count > 0);
@@ -194,7 +210,7 @@ namespace Xbim.Analysis
             }
             Message("Guid Check - Complete");
         }
-        
+
         private void CheckGeometry()
         {
             Message("Starting - Geometry Check");
@@ -252,4 +268,31 @@ namespace Xbim.Analysis
             Message("Property Check - complete");
         }
     }
+
+    /// <summary>
+    /// Comparitor which only compares IfcRoot Guids (to help detect and ignore duplicates)
+    /// </summary>
+    internal class VersionGuidComparitor : IEqualityComparer<baselineitem>
+    {
+        public VersionGuidComparitor()
+        {
+        }
+
+        public bool Equals(baselineitem x, baselineitem y)
+        {
+            return x.GUID.Equals(y.GUID);
+        }
+
+        public int GetHashCode(baselineitem obj)
+        {
+            return obj.GetHashCode();
+        }
+    }
+    internal struct baselineitem
+    {
+        internal IfcGloballyUniqueId GUID;
+        internal int Label;
+        internal String Name;
+        internal Type MyType;
+}
 }

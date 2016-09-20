@@ -25,7 +25,10 @@ namespace Xbim.Analysis.Comparitors
             {
                 try
                 {
-                    results.Add(i, ChangeType.Deleted);
+                    if (!results.ContainsKey(i))
+                    {
+                        results.Add(i, ChangeType.Deleted);
+                    }
                 }
                 catch (ArgumentException) { }
             }
@@ -33,7 +36,10 @@ namespace Xbim.Analysis.Comparitors
             {
                 try
                 {
-                    results.Add(i, ChangeType.Added);
+                    if (!results.ContainsKey(i))
+                    {
+                        results.Add(i, ChangeType.Added);
+                    }
                 }
                 catch (ArgumentException) { }
             }

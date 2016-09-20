@@ -31,7 +31,10 @@ namespace Xbim.Analysis.Comparitors
                     //Check if we have a single matching result
                     if (c.Count() == 1) r = c.First();
                     else if (c.Count() > 1) { //If we have multiple results, we can't resolve this item by guid, so mark as unknown, and break
-                        changes.Add(i, ChangeType.Unknown);
+                        if (!changes.ContainsKey(i))
+                        {
+                            changes.Add(i, ChangeType.Unknown);
+                        }
                         break;
                     }
                 }
@@ -42,7 +45,10 @@ namespace Xbim.Analysis.Comparitors
                 {
                     Baseline.Remove(i);
                     Delta.Remove(r);
-                    changes.Add(i, ChangeType.Matched);
+                    if (!changes.ContainsKey(i))
+                    {
+                        changes.Add(i, ChangeType.Matched);
+                    }
                     map.Add(i.EntityLabel, r.EntityLabel);
                 }
             }
@@ -50,13 +56,19 @@ namespace Xbim.Analysis.Comparitors
             //Anything left in baseline is only in the original (ie it's been deleted)
             foreach (var i in Baseline)
             {
-                changes.Add(i, ChangeType.Deleted);
+                if (!changes.ContainsKey(i))
+                {
+                    changes.Add(i, ChangeType.Deleted);
+                }
             }
 
             //Anything left in revprods is an addition
             foreach (var i in Delta)
             {
-                changes.Add(i, ChangeType.Added);
+                if (!changes.ContainsKey(i))
+                {
+                    changes.Add(i, ChangeType.Added);
+                }
             }
 
             return changes;
