@@ -4,22 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xbim.Analysis.Comparitors;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.Ifc2x3.UtilityResource;
+using Xbim.Common;
+using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4.UtilityResource;
 using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
-using Xbim.XbimExtensions.Interfaces;
 
 namespace Xbim.Analysis
 {
     public delegate void MessageCallback(string message);
     public class VersionComparison
     {
-        private XbimModel Baseline { get; set; }
-        private XbimModel Revision { get; set; }
-        private List<IfcRoot> WorkingCopyBaseline;
-        private List<IfcRoot> WorkingCopyDelta;
+        private IModel Baseline { get; set; }
+        private IModel Revision { get; set; }
+        private List<IIfcRoot> WorkingCopyBaseline;
+        private List<IIfcRoot> WorkingCopyDelta;
 
         public event MessageCallback OnMessage;
         private void Message(String message)
@@ -27,13 +26,13 @@ namespace Xbim.Analysis
             if (OnMessage != null) OnMessage(message);
         }
 
-        public Dictionary<IfcRoot, ChangeType> EntityLabelChanges = new Dictionary<IfcRoot, ChangeType>();
+        public Dictionary<IIfcRoot, ChangeType> EntityLabelChanges = new Dictionary<IIfcRoot, ChangeType>();
         public Dictionary<Int32, Int32> EntityMapping = new Dictionary<Int32, Int32>();
-        public List<IfcRoot> Deleted = new List<IfcRoot>();
-        public List<IfcRoot> Added = new List<IfcRoot>();
+        public List<IIfcRoot> Deleted = new List<IIfcRoot>();
+        public List<IIfcRoot> Added = new List<IIfcRoot>();
         public List<IfcGloballyUniqueId> DuplicateBaseItems = new List<IfcGloballyUniqueId>();
 
-        public Int32 StartComparison(XbimModel baseline, XbimModel revision, string filter = "")
+        public Int32 StartComparison(IModel baseline, IModel revision, string filter = "")
         {
 
             Baseline = baseline;
@@ -44,8 +43,8 @@ namespace Xbim.Analysis
             {
                 // default behaviour (maintained during code review) is to test only for IfcProducts
                 //
-                WorkingCopyBaseline = Baseline.Instances.OfType<IfcProduct>().ToList<IfcRoot>();
-                WorkingCopyDelta = Revision.Instances.OfType<IfcProduct>().ToList<IfcRoot>();
+                WorkingCopyBaseline = Baseline.Instances.OfType<IIfcProduct>().ToList<IIfcRoot>();
+                WorkingCopyDelta = Revision.Instances.OfType<IIfcProduct>().ToList<IIfcRoot>();
 
                 //get guids into dictionary
                 var MyTemp = WorkingCopyBaseline.Select(p => new baselineitem { GUID = p.GlobalId, Label = p.EntityLabel, Name = p.Name, MyType = p.GetType() }).ToList();
@@ -66,10 +65,10 @@ namespace Xbim.Analysis
                 IfcType ot = IfcMetaData.IfcType(filter.ToUpper());
                 if (ot != null)
                 {
-                    if (ot.Type.IsSubclassOf(typeof(IfcRoot)))
+                    if (ot.Type.IsSubclassOf(typeof(IIfcRoot)))
                     {
-                        WorkingCopyBaseline = new List<IfcRoot>(Baseline.Instances.OfType(filter, false).Cast<IfcRoot>());
-                        WorkingCopyDelta = new List<IfcRoot>(Revision.Instances.OfType(filter, false).Cast<IfcRoot>());
+                        WorkingCopyBaseline = new List<IIfcRoot>(Baseline.Instances.OfType(filter, false).Cast<IIfcRoot>());
+                        WorkingCopyDelta = new List<IIfcRoot>(Revision.Instances.OfType(filter, false).Cast<IIfcRoot>());
                         ret += StartProductsComparison();
                     }
                 }
@@ -270,7 +269,7 @@ namespace Xbim.Analysis
     }
 
     /// <summary>
-    /// Comparitor which only compares IfcRoot Guids (to help detect and ignore duplicates)
+    /// Comparitor which only compares IIfcRoot Guids (to help detect and ignore duplicates)
     /// </summary>
     internal class VersionGuidComparitor : IEqualityComparer<baselineitem>
     {

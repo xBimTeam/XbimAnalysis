@@ -2,20 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Xbim.XbimExtensions.SelectTypes;
-using Xbim.Ifc2x3.MaterialResource;
+using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Analysis.Extensions
 {
-    public static class IfcMaterialSelectExtensions
+    public static class IIfcMaterialSelectExtensions
     {
-        public static int CreateHashCode(this IfcMaterialSelect materialSelect)
+        public static int CreateHashCode(this IIfcMaterialSelect materialSelect)
         {
-            var material = materialSelect as IfcMaterial;
+            var material = materialSelect as IIfcMaterial;
             if (material != null)
                 return "IfcMaterial".GetHashCode() + material.Name.GetHashCode();
             
-            var materialList = materialSelect as IfcMaterialList;
+            var materialList = materialSelect as IIfcMaterialList;
             if (materialList != null)
             {
                 int result = "IfcMaterialList".GetHashCode();
@@ -26,7 +25,7 @@ namespace Xbim.Analysis.Extensions
                 return result;
             }
 
-            var usage = materialSelect as IfcMaterialLayerSetUsage;
+            var usage = materialSelect as IIfcMaterialLayerSetUsage;
             if (usage != null)
             {
                 int result = "IfcMaterialLayerSetUsage".GetHashCode();
@@ -34,7 +33,7 @@ namespace Xbim.Analysis.Extensions
                 return result += lSet.CreateHashCode();
             }
 
-            var layerSet = materialSelect as IfcMaterialLayerSet;
+            var layerSet = materialSelect as IIfcMaterialLayerSet;
             if (layerSet != null)
             {
                 int result = "IfcMaterialLayerSet".GetHashCode();
@@ -45,7 +44,7 @@ namespace Xbim.Analysis.Extensions
                 return result;
             }
 
-            var layer = materialSelect as IfcMaterialLayer;
+            var layer = materialSelect as IIfcMaterialLayer;
             if (layer != null)
             {
                 int result = "IfcMaterialLayer".GetHashCode();

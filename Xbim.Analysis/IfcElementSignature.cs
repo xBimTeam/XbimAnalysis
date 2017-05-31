@@ -1,25 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Xbim.Ifc2x3.Extensions;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.ModelGeometry.Scene;
-using Xbim.Ifc2x3.RepresentationResource;
 using Xbim.Common.Geometry;
-using Xbim.Ifc2x3.GeometryResource;
-using Xbim.Ifc2x3.GeometricModelResource;
-using System.Diagnostics;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.XbimExtensions.SelectTypes;
-using Xbim.Ifc2x3.PropertyResource;
+using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4.Kernel;
+using Xbim.Ifc4.PropertyResource;
+using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Analysis
 {
 
-    public struct PropertySetNameComparer : IComparer<IfcPropertySet>
+    public struct PropertySetNameComparer : IComparer<IIfcPropertySet>
     {
 
-        public int Compare(IfcPropertySet x, IfcPropertySet y)
+        public int Compare(IIfcPropertySet x, IIfcPropertySet y)
         {
             return string.Compare(x.Name, y.Name);
         }
@@ -86,15 +79,17 @@ namespace Xbim.Analysis
         public int ConnectedFromKey;
         public int ContainedInStructureKey;
 
-        public IfcElementSignature(IfcElement elem, Xbim3DModelContext geometryContext)
+        public IfcElementSignature(IIfcElement elem, IGeometryStoreReader geometryContext)
         {
+
+
             XbimMatrix3D m3D = XbimMatrix3D.Identity;
             if(elem.ObjectPlacement !=null) m3D = elem.ObjectPlacement.ToMatrix3D();
-            var geomManager = elem.ModelOf.GeometryManager;
+            //var geomManager = elem.Model.GeometryManager;
             
             ShapeId = 0;
             //get the 3D shape
-            var shapes = geometryContext.ShapeInstancesOf(elem);
+            var shapes = geometryContext.ShapeInstancesOfEntity(elem);
             if (shapes.Any())
             {
                 XbimRect3D r3D = XbimRect3D.Empty;
@@ -114,10 +109,10 @@ namespace Xbim.Analysis
                 CentroidZ = p3D.Z;
             }
             //get the defining type
-            IfcTypeObject ot = elem.GetDefiningType();
-            IfcMaterialSelect material = elem.GetMaterial();
+            IIfcTypeObject ot = elem.GetDefiningType();
+            IIfcMaterialSelect material = (elem is IIfcObjectDefinition) ? (elem as IIfcObjectDefinition).Material : null;
             //sort out property definitions
-            List<IfcPropertySet> psets = elem.GetAllPropertySets();
+            List<IIfcPropertySet> psets = elem.GetAllPropertySets();
             PropertyCount = psets.SelectMany(p => p.HasProperties).Count();
             psets.Sort(new PropertySetNameComparer());
             foreach (var pset in psets)
@@ -137,7 +132,7 @@ namespace Xbim.Analysis
             }
             ModelID =elem.EntityLabel;
             SchemaType = elem.GetType().Name;
-            DefinedTypeId = (ot == null ? "" : ot.GlobalId.ToPart21);
+            DefinedTypeId = (ot == null ? "" : (string)ot.GlobalId);
             GlobalId = elem.GlobalId;
             OwningUser = elem.OwnerHistory.LastModifyingUser != null ? elem.OwnerHistory.LastModifyingUser.ToString() : elem.OwnerHistory.OwningUser.ToString();
             Name = elem.Name ?? "";
@@ -147,16 +142,16 @@ namespace Xbim.Analysis
             DecomposesKey = elem.Decomposes.Count();
             HasAssociationsKey = elem.HasAssociations.Count();
             ObjectType = elem.ObjectType ?? "";
-            MaterialName = material == null ? "" : material.Name;
+            MaterialName = material == null ? "" : material.ToString();
             ReferencedByKey = elem.ReferencedBy.Count();
             Tag = elem.Tag ?? "";
-            HasStructuralMemberKey = elem.HasStructuralMember.Count();
+            HasStructuralMemberKey = 0; // elem.HasStructuralMember.Count();
             FillsVoidsKey = elem.FillsVoids.Count();
             ConnectedToKey = elem.ConnectedTo.Count();
             HasCoveringsKey = elem.HasCoverings.Count();
             HasProjectionsKey = elem.HasProjections.Count();
             ReferencedInStructuresKey = elem.ReferencedInStructures.Count();
-            HasPortsKey = elem.HasPorts.Count();
+            HasPortsKey = (elem is IIfcDistributionElement) ? (elem as IIfcDistributionElement).HasPorts.Count() : 0;
             HasOpeningsKey = elem.HasOpenings.Count();
             IsConnectionRealizationKey = elem.IsConnectionRealization.Count();
             ProvidesBoundariesKey = elem.ProvidesBoundaries.Count();

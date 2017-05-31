@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Xbim.XbimExtensions.SelectTypes;
+using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Analysis.Extensions
 {
@@ -13,7 +13,7 @@ namespace Xbim.Analysis.Extensions
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static int CreateHash(this IfcSimpleValue value)
+        public static int CreateHash(this IIfcSimpleValue value)
         {
             if (value == null)
                 throw new ArgumentNullException();

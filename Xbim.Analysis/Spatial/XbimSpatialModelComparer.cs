@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
-using Xbim.ModelGeometry.Scene;
-using Xbim.Ifc2x3.Kernel;
+using System.Threading.Tasks;
 using Xbim.Common.Geometry;
 using Xbim.IO;
-using System.IO;
-using System.Diagnostics;
+using Xbim.ModelGeometry.Scene;
 using Xbim.XbimExtensions.Interfaces;
-using System.Threading.Tasks;
-using Xbim.Ifc2x3.SharedBldgElements;
-using Xbim.Ifc2x3.Extensions;
 namespace Xbim.Analysis.Spatial
 {
     public class XbimSpatialModelComparer
@@ -25,12 +22,12 @@ namespace Xbim.Analysis.Spatial
         private XbimProductVersionComparison _comparison = new XbimProductVersionComparison();
         private HashSet<IfcProduct> _processedFromB = new HashSet<IfcProduct>();
         
-        private XbimModel _modelA;
-        private XbimModel _modelB;
+        private IModel _modelA;
+        private IModel _modelB;
 
         private double _precision;
         
-//        public XbimSpatialModelComparer(XbimModel modelA, XbimModel modelB)
+//        public XbimSpatialModelComparer(IModel modelA, IModel modelB)
 //        {
 //            if (modelA == null || modelB == null) 
 //                throw new ArgumentNullException();
@@ -49,7 +46,7 @@ namespace Xbim.Analysis.Spatial
 //            //get axis aligned BBoxes and overall world size
 //            XbimRect3D worldBB = XbimRect3D.Empty;
 //            foreach (var model in new[] { modelA, modelB })
-//            //Parallel.ForEach<XbimModel>(new[] { modelA, modelB }, model =>
+//            //Parallel.ForEach<IModel>(new[] { modelA, modelB }, model =>
 //            {
 //                //generate geometry if there is no in the model
 //                if (model.GeometriesCount == 0)

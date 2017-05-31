@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Xbim.Ifc2x3.Kernel;
 using Xbim.Common.Geometry;
 using Xbim.IO;
 using System.IO;
@@ -15,17 +14,17 @@ namespace Xbim.Analysis.Spatial
     /// </summary>
     public class XbimAABBoxAnalyser : ISpatialRelations
     {
-        private XbimModel _model;
+        private IModel _model;
         private Dictionary<IfcProduct, XbimRect3D> _prodBBs = new Dictionary<IfcProduct, XbimRect3D>();
 
-        public XbimModel Model { get { return _model; } }
+        public IModel Model { get { return _model; } }
 
         /// <summary>
         /// Constructor of spatial relations analyser of axis aligned bounding boxes of the products.
         /// If you already have a dictionary of the AABBoxes and products you should use the other constructor
         /// </summary>
         /// <param name="model">Building model</param>
-        public XbimAABBoxAnalyser(XbimModel model)
+        public XbimAABBoxAnalyser(IModel model)
         {
             _model = model;
             Xbim3DModelContext context = new Xbim3DModelContext(model);
@@ -59,7 +58,7 @@ namespace Xbim.Analysis.Spatial
         /// </summary>
         /// <param name="model">Building model</param>
         /// <param name="prodBBs">Axis aligned bounding boxes of the products</param>
-        public XbimAABBoxAnalyser(XbimModel model, Dictionary<IfcProduct, XbimRect3D> prodBBs)
+        public XbimAABBoxAnalyser(IModel model, Dictionary<IfcProduct, XbimRect3D> prodBBs)
         {
             _model = model;
             _prodBBs = prodBBs;

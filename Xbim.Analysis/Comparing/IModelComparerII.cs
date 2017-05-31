@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Xbim.Ifc2x3.Kernel;
+using Xbim.Common;
+using Xbim.Ifc4.Interfaces;
 using Xbim.IO;
 
 namespace Xbim.Analysis.Comparing
@@ -36,7 +37,7 @@ namespace Xbim.Analysis.Comparing
         /// <param name="baseline">object from the baseline model</param>
         /// <param name="revisedModel">revised model</param>
         /// <returns></returns>
-        ComparisonResult Compare<T>(T baseline, XbimModel revisedModel) where T : IfcRoot;
+        ComparisonResult Compare<T>(T baseline, IModel revisedModel) where T : IIfcRoot;
 
         /// <summary>
         /// Gets all objects of the specified type which were not returned in any comparison result before
@@ -44,7 +45,7 @@ namespace Xbim.Analysis.Comparing
         /// <typeparam name="T">Type to search for. It should be the same type used before in Compare() function.</typeparam>
         /// <param name="revisedModel">Revised model</param>
         /// <returns>Comparison result with null baseline</returns>
-        ComparisonResult GetResidualsFromRevision<T>(XbimModel revisedModel) where T : IfcRoot;
+        ComparisonResult GetResidualsFromRevision<T>(IModel revisedModel) where T : IIfcRoot;
 
         /// <summary>
         /// Gets overall comparison of the base model and its revised version
@@ -53,7 +54,7 @@ namespace Xbim.Analysis.Comparing
         /// <param name="baseline">Baseline model</param>
         /// <param name="revisedModel">Revised model</param>
         /// <returns></returns>
-        IEnumerable<ComparisonResult> Compare<T>(XbimModel baseline, XbimModel revised) where T : IfcRoot;
+        IEnumerable<ComparisonResult> Compare<T>(IModel baseline, IModel revised) where T : IIfcRoot;
 
         /// <summary>
         /// Gets difference between two objects. This is to be used to explore the difference in detail. This 
@@ -63,7 +64,7 @@ namespace Xbim.Analysis.Comparing
         /// <param name="baseline">Baseline object</param>
         /// <param name="revision">Revised object which is supposed to be the match of the baseline</param>
         /// <returns>Enumeration of the differences like list of changed attributes or properties.</returns>
-        IEnumerable<Difference> GetDifferences(IfcRoot baseline, IfcRoot revision);
+        IEnumerable<Difference> GetDifferences(IIfcRoot baseline, IIfcRoot revision);
     }
 
     /// <summary>
@@ -91,11 +92,11 @@ namespace Xbim.Analysis.Comparing
     /// </summary>
     public class ComparisonResult
     {
-        private IfcRoot _baseline;
+        private IIfcRoot _baseline;
         /// <summary>
         /// Baseline of the comparison
         /// </summary>
-        public IfcRoot Baseline { get { return _baseline; } }
+        public IIfcRoot Baseline { get { return _baseline; } }
 
         private ComparisonCandidates _candidates = new ComparisonCandidates();
         /// <summary>
@@ -107,7 +108,7 @@ namespace Xbim.Analysis.Comparing
         private IModelComparerII _comparer;
         public IModelComparerII Comparer { get { return _comparer; } }
 
-        public ComparisonResult(IfcRoot baseline, IModelComparerII comparer)
+        public ComparisonResult(IIfcRoot baseline, IModelComparerII comparer)
         {
             if (comparer == null)
                 throw new ArgumentNullException("comparer");
@@ -132,7 +133,7 @@ namespace Xbim.Analysis.Comparing
     /// <summary>
     /// List of candidates for the match
     /// </summary>
-    public class ComparisonCandidates : List<IfcRoot> { }
+    public class ComparisonCandidates : List<IIfcRoot> { }
 
     public enum ComparisonType
     {

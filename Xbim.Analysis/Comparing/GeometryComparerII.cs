@@ -4,10 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-//using Xbim.Analysis.Spatial;
 using Xbim.Common.Geometry;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
 
 namespace Xbim.Analysis.Comparing
@@ -23,8 +20,8 @@ namespace Xbim.Analysis.Comparing
         private XbimProductVersionComparison _comparison = new XbimProductVersionComparison();
         private HashSet<IfcProduct> _processedFromB = new HashSet<IfcProduct>();
 
-        private XbimModel _baselineModel;
-        private XbimModel _revisedModel;
+        private IModel _baselineModel;
+        private IModel _revisedModel;
 
         private Xbim3DModelContext _baselineContext;
         private Xbim3DModelContext _revisedContext;
@@ -32,7 +29,7 @@ namespace Xbim.Analysis.Comparing
         private double _precision;
         private double _meter;
 
-        public GeometryComparerII(XbimModel baselineModel, XbimModel revisedModel)
+        public GeometryComparerII(IModel baselineModel, IModel revisedModel)
         {
             //Martin needs to be re-engineered for new Geometry
 
@@ -83,7 +80,7 @@ namespace Xbim.Analysis.Comparing
             }
 
             ////foreach (var model in new[] { baselineModel, revisedModel })
-            //Parallel.ForEach<XbimModel>(new[] { baselineModel, revisedModel }, model =>
+            //Parallel.ForEach<IModel>(new[] { baselineModel, revisedModel }, model =>
             //{
             //    //load geometry engine using local path
             //    if (model.GeometriesCount == 0)
@@ -168,7 +165,7 @@ namespace Xbim.Analysis.Comparing
         }
 
 
-        public ComparisonResult Compare<T>(T baseline, IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        public ComparisonResult Compare<T>(T baseline, IModel revisedModel) where T : IIfcRoot
         {
             var product = baseline as IfcProduct;
             
@@ -201,7 +198,7 @@ namespace Xbim.Analysis.Comparing
             return result;
         }
 
-        public ComparisonResult GetResidualsFromRevision<T>(IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        public ComparisonResult GetResidualsFromRevision<T>(IModel revisedModel) where T : IIfcRoot
         {
             var result = new ComparisonResult(null, this);
             var prods = _prodBBsB.Keys.Where(p => !_processedFromB.Contains(p) && typeof(T).IsAssignableFrom(p.GetType()));
@@ -209,7 +206,7 @@ namespace Xbim.Analysis.Comparing
             return result;
         }
 
-        public IEnumerable<ComparisonResult> Compare<T>(IO.XbimModel baseline, IO.XbimModel revised) where T : Ifc2x3.Kernel.IfcRoot
+        public IEnumerable<ComparisonResult> Compare<T>(IModel baseline, IModel revised) where T : IIfcRoot
         {
             foreach (var b in baseline.Instances.OfType<T>())
             {
@@ -218,7 +215,7 @@ namespace Xbim.Analysis.Comparing
             yield return GetResidualsFromRevision<T>(revised);
         }
 
-        public IEnumerable<Difference> GetDifferences(Ifc2x3.Kernel.IfcRoot baseline, Ifc2x3.Kernel.IfcRoot revision)
+        public IEnumerable<Difference> GetDifferences(IIfcRoot baseline, IIfcRoot revision)
         {
             throw new NotImplementedException();
         }

@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Xbim.Ifc2x3.Kernel;
+using Xbim.Common;
+using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Analysis.Comparing
 {
@@ -36,8 +37,8 @@ namespace Xbim.Analysis.Comparing
             }
         }
 
-        private HashSet<IfcRoot> _processed = new HashSet<IfcRoot>();
-        public ComparisonResult Compare<T>(T baseline, IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        private HashSet<IIfcRoot> _processed = new HashSet<IIfcRoot>();
+        public ComparisonResult Compare<T>(T baseline, IModel revisedModel) where T : IIfcRoot
         {
             var result = new ComparisonResult(baseline, this);
             var candidates = revisedModel.Instances.Where<T>(r => r.GlobalId == baseline.GlobalId);
@@ -50,14 +51,14 @@ namespace Xbim.Analysis.Comparing
             return result;
         }
 
-        public ComparisonResult GetResidualsFromRevision<T>(IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        public ComparisonResult GetResidualsFromRevision<T>(IModel revisedModel) where T : IIfcRoot
         {
             var result = new ComparisonResult(null, this);
-            result.Candidates.AddRange(revisedModel.Instances.Where<T>(r => !_processed.Contains(r)));
+            result.Candidates.AddRange(revisedModel.Instances.OfType<IIfcRoot>().Where(r => !_processed.Contains(r)));
             return result;
         }
 
-        public IEnumerable<ComparisonResult> Compare<T>(IO.XbimModel baseline, IO.XbimModel revised) where T : Ifc2x3.Kernel.IfcRoot
+        public IEnumerable<ComparisonResult> Compare<T>(IModel baseline, IModel revised) where T : IIfcRoot
         {
             foreach (var b in baseline.Instances.OfType<T>())
             {
@@ -66,7 +67,7 @@ namespace Xbim.Analysis.Comparing
             yield return GetResidualsFromRevision<T>(revised);
         }
 
-        public IEnumerable<Difference> GetDifferences(Ifc2x3.Kernel.IfcRoot baseline, Ifc2x3.Kernel.IfcRoot revision)
+        public IEnumerable<Difference> GetDifferences(IIfcRoot baseline, IIfcRoot revision)
         {
             throw new NotImplementedException();
         }

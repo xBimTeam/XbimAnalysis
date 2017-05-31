@@ -2,12 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.Extensions;
-using Xbim.Ifc2x3.MaterialResource;
-using Xbim.Ifc2x3.PropertyResource;
-using Xbim.XbimExtensions.Interfaces;
 using Xbim.Analysis.Extensions;
+using Xbim.Common;
+using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Analysis.Comparing
 {
@@ -56,15 +53,15 @@ namespace Xbim.Analysis.Comparing
             }
         }
 
-        private List<IfcRoot> _processed = new List<IfcRoot>();
-        public ComparisonResult Compare<T>(T baseline, IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        private List<IIfcRoot> _processed = new List<IIfcRoot>();
+        public ComparisonResult Compare<T>(T baseline, IModel revisedModel) where T : IIfcRoot
         {
-            var baseModel = baseline.ModelOf;
+            var baseModel = baseline.Model;
             if (baseModel == revisedModel)
                 throw new ArgumentException("Baseline should be from the different model than revised model.");
 
-            //this comparison makes a sense only for IfcObjectDefinition and it's descendants
-            var objDef = baseline as IfcObjectDefinition;
+            //this comparison makes a sense only for IIfcObjectDefinition and it's descendants
+            var objDef = baseline as IIfcObjectDefinition;
             if (objDef == null) return null;
 
             var baseHashed = _cacheBase.Where(b => b.IfcObjectDefinition == objDef).FirstOrDefault();
@@ -85,17 +82,17 @@ namespace Xbim.Analysis.Comparing
             return result;
         }
 
-        public ComparisonResult GetResidualsFromRevision<T>(IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        public ComparisonResult GetResidualsFromRevision<T>(IModel revisedModel) where T : IIfcRoot
         {
             var result = new ComparisonResult(null, this);
-            var isInCache = new Func<IfcRoot, bool>(r => { return _cacheRevision.Where(c => c.IfcObjectDefinition == r).FirstOrDefault() != null; });
-            var isNotProcessed = new Func<IfcRoot, bool>(r => { return !_processed.Contains(r); });
-            result.Candidates.AddRange(revisedModel.Instances.Where<T>(r => isNotProcessed(r) && isInCache(r)));
+            var isInCache = new Func<IIfcRoot, bool>(r => { return _cacheRevision.Where(c => c.IfcObjectDefinition == r).FirstOrDefault() != null; });
+            var isNotProcessed = new Func<IIfcRoot, bool>(r => { return !_processed.Contains(r); });
+            result.Candidates.AddRange(revisedModel.Instances.OfType<IIfcRoot>().Where(r => isNotProcessed(r) && isInCache(r)));
             return result;
         }
 
 
-        public IEnumerable<ComparisonResult> Compare<T>(IO.XbimModel baseline, IO.XbimModel revised) where T : Ifc2x3.Kernel.IfcRoot
+        public IEnumerable<ComparisonResult> Compare<T>(IModel baseline, IModel revised) where T : IIfcRoot
         {
             foreach (var b in baseline.Instances.OfType<T>())
             {
@@ -104,7 +101,7 @@ namespace Xbim.Analysis.Comparing
             yield return GetResidualsFromRevision<T>(revised);
         }
 
-        public IEnumerable<Difference> GetDifferences(Ifc2x3.Kernel.IfcRoot baseline, Ifc2x3.Kernel.IfcRoot revision)
+        public IEnumerable<Difference> GetDifferences(IIfcRoot baseline, IIfcRoot revision)
         {
             throw new NotImplementedException();
         }
@@ -117,30 +114,30 @@ namespace Xbim.Analysis.Comparing
         private class PropertyHashedObjectDefinition
         {
             private int _hash;
-            private IfcObjectDefinition _objDef;
-            public IfcObjectDefinition IfcObjectDefinition { get { return _objDef; } }
+            private IIfcObjectDefinition _objDef;
+            public IIfcObjectDefinition IfcObjectDefinition { get { return _objDef; } }
 
-            private PropertyHashedObjectDefinition(IfcObjectDefinition objDef, int hash)
+            private PropertyHashedObjectDefinition(IIfcObjectDefinition objDef, int hash)
             {
                 _objDef = objDef;
                 _hash = hash;
             }
 
-            public PropertyHashedObjectDefinition(IfcObjectDefinition objDef)
-            {
-                _objDef = objDef;
-                IEnumerable<IfcPropertySet> pSets = null;
-                var o = objDef as IfcObject;
-                if (o != null)
-                    pSets = o.GetAllPropertySets();
-                var t = objDef as IfcTypeObject;
-                if (t != null)
-                    pSets = t.GetAllPropertySets();
+            //public PropertyHashedObjectDefinition(IIfcObjectDefinition objDef)
+            //{
+            //    _objDef = objDef;
+            //    IEnumerable<IIfcPropertySet> pSets = null;
+            //    var o = objDef as IIfcObject;
+            //    if (o != null)
+            //        pSets = o.GetAllPropertySets();
+            //    var t = objDef as IIfcTypeObject;
+            //    if (t != null)
+            //        pSets = t.DefinedByProperties();
 
-                _hash = 0;
-                foreach (var pSet in pSets)
-                    _hash += pSet.GetPSetHash();
-            }
+            //    _hash = 0;
+            //    foreach (var pSet in pSets)
+            //        _hash += pSet.GetPSetHash();
+            //}
 
             /// <summary>
             /// This is more efficient than doing the same object by object as it
@@ -152,27 +149,27 @@ namespace Xbim.Analysis.Comparing
             {
                 var result = new List<PropertyHashedObjectDefinition>();
                 
-                //process IfcTypeObjects
-                var types = model.Instances.OfType<IfcTypeObject>();
+                //process IIfcTypeObjects
+                var types = model.Instances.OfType<IIfcTypeObject>();
                 foreach (var type in types)
                 {
                     if (type.HasPropertySets == null) continue;
                     int hash = 0;
-                    foreach (var pSet in type.HasPropertySets.OfType<IfcPropertySet>())
+                    foreach (var pSet in type.HasPropertySets.OfType<IIfcPropertySet>())
                         hash += pSet.GetPSetHash();
                     result.Add(new PropertyHashedObjectDefinition(type, hash));
                 }
 
-                //process IfcObjects
-                var objs = model.Instances.OfType<IfcObject>();
-                var cache = new Dictionary<IfcObject, int?>();
+                //process IIfcObjects
+                var objs = model.Instances.OfType<IIfcObject>();
+                var cache = new Dictionary<IIfcObjectDefinition, int?>();
                 //init cache with null hases
                 foreach (var obj in objs)
                     cache.Add(obj, null);
-                var rels = model.Instances.OfType<IfcRelDefinesByProperties>();
+                var rels = model.Instances.OfType<IIfcRelDefinesByProperties>();
                 foreach (var rel in rels)
                 {
-                    var pSet = rel.RelatingPropertyDefinition as IfcPropertySet;
+                    var pSet = rel.RelatingPropertyDefinition as IIfcPropertySet;
                     if (pSet == null) continue;
                     var pSetHash = pSet.GetPSetHash();
                     foreach (var o in rel.RelatedObjects)
@@ -204,19 +201,19 @@ namespace Xbim.Analysis.Comparing
                 if (objDef == null) return false;
 
                 //do the proper equality comparison based on the properties.
-                IEnumerable<IfcPropertySet> set1 = null;
-                IEnumerable<IfcPropertySet> set2 = null;
+                IItemSet<IIfcPropertySet> set1 = null;
+                IItemSet<IIfcPropertySet> set2 = null;
 
-                var o2 = objDef.IfcObjectDefinition as IfcObject;
-                var o1 = _objDef as IfcObject;
+                var o2 = objDef.IfcObjectDefinition as IIfcObject;
+                var o1 = _objDef as IIfcObject;
                 if (o2 != null && o1 != null)
                 {
                     set1 = o1.GetAllPropertySets();
                     set2 = o2.GetAllPropertySets();
                 }
 
-                var t1 = _objDef as IfcTypeObject;
-                var t2 = objDef._objDef as IfcTypeObject;
+                var t1 = _objDef as IIfcTypeObject;
+                var t2 = objDef._objDef as IIfcTypeObject;
                 if (t1 != null && t2 != null)
                 {
                     set1 = t1.GetAllPropertySets();
@@ -230,7 +227,7 @@ namespace Xbim.Analysis.Comparing
 
             }
 
-            private bool ComparePSets(IfcPropertySet baseline, IfcPropertySet revision)
+            private bool ComparePSets(IIfcPropertySet baseline, IIfcPropertySet revision)
             {
                 if (baseline.Name != revision.Name)
                     return false;
@@ -243,7 +240,7 @@ namespace Xbim.Analysis.Comparing
 
             }
 
-            private bool HasEquivalent(IfcProperty property, IfcPropertySet revisionPset)
+            private bool HasEquivalent(IIfcProperty property, IIfcPropertySet revisionPset)
             {
                 //check if property with the same name even exist
                 var candidate = revisionPset.HasProperties.Where(p => p.Name == property.Name).FirstOrDefault();
@@ -254,19 +251,19 @@ namespace Xbim.Analysis.Comparing
                 switch (property.GetType().Name)
                 {
                     case "IfcPropertySingleValue":
-                        var single = candidate as IfcPropertySingleValue;
+                        var single = candidate as IIfcPropertySingleValue;
                         if (single == null) return false;
                         var revVal = single.NominalValue;
-                        var baseVal = ((IfcPropertySingleValue)(property)).NominalValue;
+                        var baseVal = ((IIfcPropertySingleValue)(property)).NominalValue;
                         var revStr = revVal == null ? "" : revVal.ToString();
                         var baseStr = baseVal == null ? "" : baseVal.ToString();
                         if (baseStr != revStr)
                             return false;
                         break;
                     case "IfcPropertyEnumeratedValue":
-                        var enumerated = candidate as IfcPropertyEnumeratedValue;
+                        var enumerated = candidate as IIfcPropertyEnumeratedValue;
                         if (enumerated == null) return false;
-                        var baseEnum = property as IfcPropertyEnumeratedValue;
+                        var baseEnum = property as IIfcPropertyEnumeratedValue;
                         if (baseEnum.EnumerationValues.Count != enumerated.EnumerationValues.Count)
                             return false;
                         foreach (var e in baseEnum.EnumerationValues)
@@ -274,18 +271,18 @@ namespace Xbim.Analysis.Comparing
                                 return false;
                         break;
                     case "IfcPropertyBoundedValue":
-                        var bounded = candidate as IfcPropertyBoundedValue;
+                        var bounded = candidate as IIfcPropertyBoundedValue;
                         if (bounded == null) return false;
-                        var baseBounded = property as IfcPropertyBoundedValue;
+                        var baseBounded = property as IIfcPropertyBoundedValue;
                         if (bounded.LowerBoundValue != baseBounded.LowerBoundValue)
                             return false;
                         if (baseBounded.UpperBoundValue != bounded.UpperBoundValue)
                             return false;
                         break;
                     case "IfcPropertyTableValue":
-                        var table = candidate as IfcPropertyTableValue;
+                        var table = candidate as IIfcPropertyTableValue;
                         if (table == null) return false;
-                        var baseTable = property as IfcPropertyTableValue;
+                        var baseTable = property as IIfcPropertyTableValue;
                         if (baseTable.DefiningValues.Count != table.DefiningValues.Count)
                             return false;
                         //check all table items
@@ -300,9 +297,9 @@ namespace Xbim.Analysis.Comparing
                         }
                         break;
                     case "IfcPropertyReferenceValue":
-                        var reference = candidate as IfcPropertyReferenceValue;
+                        var reference = candidate as IIfcPropertyReferenceValue;
                         if (reference == null) return false;
-                        var baseRef = property as IfcPropertyReferenceValue;
+                        var baseRef = property as IIfcPropertyReferenceValue;
                         if (reference.UsageName != baseRef.UsageName)
                             return false;
                         if (reference.PropertyReference.GetType() != baseRef.PropertyReference.GetType())
@@ -310,9 +307,9 @@ namespace Xbim.Analysis.Comparing
                         //should go deeper but it would be too complicated for now
                         break;
                     case "IfcPropertyListValue":
-                        var list = candidate as IfcPropertyListValue;
+                        var list = candidate as IIfcPropertyListValue;
                         if (list == null) return false;
-                        var baseList = property as IfcPropertyListValue;
+                        var baseList = property as IIfcPropertyListValue;
                         if (baseList.ListValues.Count != list.ListValues.Count)
                             return false;
                         foreach (var item in baseList.ListValues)
@@ -325,7 +322,7 @@ namespace Xbim.Analysis.Comparing
                 return true;
             }
 
-            private bool ComparePsetsSet(IEnumerable<IfcPropertySet> baseline, IEnumerable<IfcPropertySet> revision)
+            private bool ComparePsetsSet(IEnumerable<IIfcPropertySet> baseline, IEnumerable<IIfcPropertySet> revision)
             {
                 if (baseline.Count() != revision.Count())
                     return false;
@@ -340,7 +337,7 @@ namespace Xbim.Analysis.Comparing
                 return true;
             }
 
-            private static int psetsOrder(IfcPropertySet x, IfcPropertySet y)
+            private static int psetsOrder(IIfcPropertySet x, IIfcPropertySet y)
             {
                 if (x.Name == null && y.Name != null) return -1;
                 if (x.Name != null && y.Name == null) return 1;

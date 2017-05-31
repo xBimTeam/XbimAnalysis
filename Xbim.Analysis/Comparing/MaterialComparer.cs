@@ -1,26 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.Extensions;
-using Xbim.IO;
-using Xbim.XbimExtensions.SelectTypes;
 using Xbim.Analysis.Extensions;
+using Xbim.Common;
+using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4.Kernel;
 
 namespace Xbim.Analysis.Comparing
 {
     public class MaterialComparer : IModelComparerII
     {
-        private XbimModel _model;
+        private IModel _model;
         private List<MaterialHash> _cache = new List<MaterialHash>();
 
-        public MaterialComparer(XbimModel revisedModel)
+        public MaterialComparer(IModel revisedModel)
         {
             _model = revisedModel;
-            var roots = revisedModel.Instances.OfType<IfcRoot>();
+            var roots = revisedModel.Instances.OfType<IfcObjectDefinition>();
             foreach (var root in roots)
             {
-                var material = root.GetMaterial();
+                var material = root.Material;
                 if (material != null)
                 _cache.Add(new MaterialHash(root, material));
             }
@@ -55,11 +54,15 @@ namespace Xbim.Analysis.Comparing
             }
         }
 
-        private HashSet<IfcRoot> _processed = new HashSet<IfcRoot>();
+        private HashSet<IIfcRoot> _processed = new HashSet<IIfcRoot>();
 
-        public ComparisonResult Compare<T>(T baseline, IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        public ComparisonResult Compare<T>(T baseline, IModel revisedModel) where T : IIfcRoot
         {
-            var matSel = baseline.GetMaterial();
+            if (!(baseline is IfcObjectDefinition))
+                return null;
+
+            var baseObj = baseline as IfcObjectDefinition;
+            var matSel = baseObj.Material;
             if (matSel == null)
                 return null;
 
@@ -68,7 +71,7 @@ namespace Xbim.Analysis.Comparing
             var hashes = _cache.Where(m => m.GetHashCode() == matHashed.GetHashCode());
             foreach (var h in hashes)
             {
-                if ((h.Root is IfcObject && baseline is IfcObject) || (h.Root is IfcTypeObject && baseline is IfcTypeObject))
+                if ((h.Root is IfcObject && baseline is IfcObject) || (h.Root is IIfcTypeObject && baseline is IIfcTypeObject))
                 {
                     result.Candidates.Add(h.Root);
                     _processed.Add(h.Root);
@@ -77,16 +80,16 @@ namespace Xbim.Analysis.Comparing
             return result;
         }
 
-        public ComparisonResult GetResidualsFromRevision<T>(IO.XbimModel revisedModel) where T : Ifc2x3.Kernel.IfcRoot
+        public ComparisonResult GetResidualsFromRevision<T>(IModel revisedModel) where T : IIfcRoot
         {
             var result = new ComparisonResult(null, this);
-            var isInCache = new Func<IfcRoot, bool>(r => { return _cache.Where(c => c.Root == r).FirstOrDefault() != null; });
-            var isNotProcessed = new Func<IfcRoot, bool>(r => { return !_processed.Contains(r); });
-            result.Candidates.AddRange(revisedModel.Instances.Where<T>(r => isNotProcessed(r) && isInCache(r)));
+            var isInCache = new Func<IIfcRoot, bool>(r => { return _cache.Where(c => c.Root == r).FirstOrDefault() != null; });
+            var isNotProcessed = new Func<IIfcRoot, bool>(r => { return !_processed.Contains(r); });
+            result.Candidates.AddRange(revisedModel.Instances.OfType<IIfcRoot>().Where(r => isNotProcessed(r) && isInCache(r)));
             return result;
         }
 
-        public IEnumerable<ComparisonResult> Compare<T>(IO.XbimModel baseline, IO.XbimModel revised) where T : Ifc2x3.Kernel.IfcRoot
+        public IEnumerable<ComparisonResult> Compare<T>(IModel baseline, IModel revised) where T : IIfcRoot
         {
             foreach (var b in baseline.Instances.OfType<T>())
             {
@@ -95,7 +98,7 @@ namespace Xbim.Analysis.Comparing
             yield return GetResidualsFromRevision<T>(revised);
         }
 
-        public IEnumerable<Difference> GetDifferences(Ifc2x3.Kernel.IfcRoot baseline, Ifc2x3.Kernel.IfcRoot revision)
+        public IEnumerable<Difference> GetDifferences(IIfcRoot baseline, IIfcRoot revision)
         {
             throw new NotImplementedException();
         }
@@ -104,13 +107,13 @@ namespace Xbim.Analysis.Comparing
         private class MaterialHash
         {
             private int _hash;
-            private IfcMaterialSelect _material;
-            private IfcRoot _root;
+            private IIfcMaterialSelect _material;
+            private IIfcRoot _root;
 
-            public IfcMaterialSelect Material { get { return _material; } }
-            public IfcRoot Root { get { return _root; } }
+            public IIfcMaterialSelect Material { get { return _material; } }
+            public IIfcRoot Root { get { return _root; } }
 
-            public MaterialHash(IfcRoot root, IfcMaterialSelect material)
+            public MaterialHash(IIfcRoot root, IIfcMaterialSelect material)
             {
                 _root = root;
                 _material = material;

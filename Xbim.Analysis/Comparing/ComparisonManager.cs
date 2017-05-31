@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.IO;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.HSSF.Util;
+using Xbim.Common;
+using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Analysis.Comparing
 {
@@ -15,12 +15,12 @@ namespace Xbim.Analysis.Comparing
     {
         private List<IModelComparerII> _comparers = new List<IModelComparerII>();
         private ComparisonResultsCollection _results = new ComparisonResultsCollection();
-        private XbimModel _baseModel;
-        private XbimModel _revisedModel;
+        private IModel _baseModel;
+        private IModel _revisedModel;
 
         public ComparisonResultsCollection Results { get { return _results; } }
 
-        public ComparisonManager(XbimModel baseModel, XbimModel revisedModel)
+        public ComparisonManager(IModel baseModel, IModel revisedModel)
         {
             _baseModel = baseModel;
             _revisedModel = revisedModel;
@@ -34,7 +34,7 @@ namespace Xbim.Analysis.Comparing
 
         }
 
-        public void Compare<T>() where T : IfcRoot
+        public void Compare<T>() where T : IIfcRoot
         {
             _results = new ComparisonResultsCollection();
             var baselineRoots = _baseModel.Instances.OfType<T>().ToList();
@@ -408,7 +408,7 @@ namespace Xbim.Analysis.Comparing
         /// <summary>
         /// Objects from baseline model which are not present in revision
         /// </summary>
-        public IEnumerable<IfcRoot> Deleted
+        public IEnumerable<IIfcRoot> Deleted
         {
             get 
             {
@@ -423,7 +423,7 @@ namespace Xbim.Analysis.Comparing
         /// <summary>
         /// Objects from revision which are not present in baseline model
         /// </summary>
-        public IEnumerable<IfcRoot> Added
+        public IEnumerable<IIfcRoot> Added
         {
             get
             {
@@ -441,11 +441,11 @@ namespace Xbim.Analysis.Comparing
         /// Dictionary of matching objects where key is 
         /// from baseline model and value is from revision
         /// </summary>
-        public IDictionary<IfcRoot, IfcRoot> MatchOneToOne
+        public IDictionary<IIfcRoot, IIfcRoot> MatchOneToOne
         {
             get 
             {
-                var res = new Dictionary<IfcRoot, IfcRoot>();
+                var res = new Dictionary<IIfcRoot, IIfcRoot>();
                 foreach (var result in this._results)
                 {
                     var bestMatch = result.BestMatch;
@@ -462,11 +462,11 @@ namespace Xbim.Analysis.Comparing
         /// in the revision model. Weights are based on the weights
         /// of comparers.
         /// </summary>
-        public IDictionary<IfcRoot, List<WeightedRoot>> Ambiquity
+        public IDictionary<IIfcRoot, List<WeightedRoot>> Ambiquity
         {
             get
             {
-                var res = new Dictionary<IfcRoot, List<WeightedRoot>>();
+                var res = new Dictionary<IIfcRoot, List<WeightedRoot>>();
                 foreach (var result in this._results)
                 {
                     var bestMatch = result.BestMatch;
@@ -493,7 +493,7 @@ namespace Xbim.Analysis.Comparing
             }
         }
 
-        public IfcRoot Baseline
+        public IIfcRoot Baseline
         {
             get
             {
@@ -592,7 +592,7 @@ namespace Xbim.Analysis.Comparing
     public class WeightedRoot : IComparable
     {
         public int Weight;
-        public IfcRoot Candidate;
+        public IIfcRoot Candidate;
 
         public int CompareTo(object obj)
         {

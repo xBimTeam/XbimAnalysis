@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Xbim.Ifc2x3.Kernel;
+using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Analysis.Comparitors
 {
@@ -11,19 +11,19 @@ namespace Xbim.Analysis.Comparitors
         private Dictionary<Int32, Int32> map = new Dictionary<Int32, Int32>();
         public Dictionary<Int32, Int32> GetMap() { return map; }
 
-        public Dictionary<IfcRoot, ChangeType> Compare(IEnumerable<IfcRoot> baseline, IEnumerable<IfcRoot> delta)
+        public Dictionary<IIfcRoot, ChangeType> Compare(IEnumerable<IIfcRoot> baseline, IEnumerable<IIfcRoot> delta)
         {
             //Create our dictionary for return
-            Dictionary<IfcRoot, ChangeType> changes = new Dictionary<IfcRoot, ChangeType>();
+            Dictionary<IIfcRoot, ChangeType> changes = new Dictionary<IIfcRoot, ChangeType>();
 
             //Work from copies so we can alter collections
-            List<IfcRoot> Baseline = new List<IfcRoot>(baseline);
-            List<IfcRoot> Delta = new List<IfcRoot>(delta);
+            List<IIfcRoot> Baseline = new List<IIfcRoot>(baseline);
+            List<IIfcRoot> Delta = new List<IIfcRoot>(delta);
 
             foreach (var i in baseline)
             {
                 //Try to get the item in baseline and revisions
-                IfcRoot r = null;
+                IIfcRoot r = null;
                 try
                 {
                     var c = Delta.Where(x => x.GlobalId == i.GlobalId);

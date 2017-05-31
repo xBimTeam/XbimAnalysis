@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.PropertyResource;
+using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4.PropertyResource;
 
 namespace Xbim.Analysis.Extensions
 {
     public static class IfcPropertySetExtensions
     {
-        public static int GetPropertyHash(this IfcProperty property)
+        public static int GetPropertyHash(this IIfcProperty property)
         {
             if (property == null) return 0;
 
@@ -60,7 +60,7 @@ namespace Xbim.Analysis.Extensions
             throw new NotImplementedException();
         }
 
-        public static int GetPSetHash(this IfcPropertySet pSet)
+        public static int GetPSetHash(this IIfcPropertySet pSet)
         {
             if (pSet == null) return 0;
             var result = pSet.GetType().GetHashCode();

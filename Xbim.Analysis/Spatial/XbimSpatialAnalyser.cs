@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.XbimExtensions.Interfaces;
-using Xbim.IO;
-using Xbim.XbimExtensions;
 using Xbim.Common.Geometry;
-using System.IO;
+using Xbim.IO;
 using Xbim.ModelGeometry.Scene;
-using System.Diagnostics;
-using Xbim.Ifc2x3.Extensions;
+using Xbim.XbimExtensions;
+using Xbim.XbimExtensions.Interfaces;
 namespace Xbim.Analysis.Spatial
 {
     public class XbimSpatialAnalyser : ISpatialAnalyser
@@ -19,8 +17,8 @@ namespace Xbim.Analysis.Spatial
         private Dictionary<IfcProduct, XbimRect3D> _prodBBs = new Dictionary<IfcProduct, XbimRect3D>();
         public XbimOctree<IfcProduct> Octree { get { return _tree; } }
 
-        private XbimModel _model;
-        public XbimModel Model { get { return _model; } }
+        private IModel _model;
+        public IModel Model { get { return _model; } }
 
         private XbimAABBoxAnalyser _bboxAnalyser;
         private XbimSemanticAnalyser _semanticAnalyser;
@@ -31,7 +29,7 @@ namespace Xbim.Analysis.Spatial
         /// computations on indexed geometries.
         /// </summary>
         /// <param name="model">Building model</param>
-        public XbimSpatialAnalyser(XbimModel model)
+        public XbimSpatialAnalyser(IModel model)
         {
             _model = model;
             _bboxAnalyser = new XbimAABBoxAnalyser(model, _prodBBs);

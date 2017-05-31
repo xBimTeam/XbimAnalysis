@@ -2,11 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Xbim.Ifc2x3.Kernel;
 using Xbim.XbimExtensions;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.Ifc2x3.SharedBldgElements;
-using Xbim.Ifc2x3.StructuralAnalysisDomain;
 using Xbim.XbimExtensions.Interfaces;
 
 namespace Xbim.Analysis.Spatial
@@ -64,10 +60,10 @@ namespace Xbim.Analysis.Spatial
             if (connPortElemRels.FirstOrDefault() != null) return true;
             
             //two elements might be connected via ports
-            if (first is IfcElement && second is IfcElement)
+            if (first is IIfcElement && second is IIfcElement)
             {
-                IfcElement fElement = first as IfcElement;
-                IfcElement sElement = second as IfcElement;
+                IIfcElement fElement = first as IIfcElement;
+                IIfcElement sElement = second as IIfcElement;
                 IEnumerable<IfcRelConnectsPortToElement> connPortToElemRels = _model.Instances.Where<IfcRelConnectsPortToElement>
                     (r => (r.RelatingPort.ConnectedTo == fElement || r.RelatingPort.ConnectedTo == sElement));
                 //get all ports
@@ -276,7 +272,7 @@ namespace Xbim.Analysis.Spatial
             }
 
             //voids
-            IfcElement element = prod as IfcElement;
+            IIfcElement element = prod as IIfcElement;
             if (element != null)
             {
                 IEnumerable<IfcRelVoidsElement> voidsRels = _model.Instances.Where<IfcRelVoidsElement>(r => r.RelatingBuildingElement == element);
@@ -296,7 +292,7 @@ namespace Xbim.Analysis.Spatial
         private IEnumerable<IfcProduct> GetFillingProducts(IfcProduct prod)
         {
             //voids
-            var element = prod as IfcElement;
+            var element = prod as IIfcElement;
             if (element != null)
             {
                 var voidsRels = _model.Instances.Where<IfcRelVoidsElement>(r => r.RelatingBuildingElement == element);
