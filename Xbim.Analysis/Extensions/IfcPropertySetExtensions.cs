@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Xbim.Common.Geometry;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc4.PropertyResource;
 
@@ -67,6 +67,86 @@ namespace Xbim.Analysis.Extensions
             foreach (var item in pSet.HasProperties)
                 result += GetPropertyHash(item);
             return result;
+        }
+
+        public static IEnumerable<IIfcPropertySet> GetAllPropertySets(this IIfcObject obj)
+        {
+            return obj.IsDefinedBy.SelectMany(r => r.RelatingPropertyDefinition.PropertySetDefinitions).OfType<IIfcPropertySet>();
+        }
+
+        public static IEnumerable<IIfcPropertySet> GetAllPropertySets(this IIfcTypeObject obj)
+        {
+            return obj.HasPropertySets.OfType<IIfcPropertySet>();
+        }
+
+        public static IIfcTypeObject GetDefiningType(this IIfcObject obj)
+        {
+            return obj.IsTypedBy.Select(r => r.RelatingType).FirstOrDefault();
+        }
+
+        public static XbimMatrix3D ToMatrix3D(this IIfcObjectPlacement objPlace)
+        {
+            var lp = objPlace as IIfcLocalPlacement;
+            if (lp != null)
+            {
+                XbimMatrix3D local = lp.RelativePlacement.ToMatrix3D();
+                if (lp.PlacementRelTo != null)
+                    return local * lp.PlacementRelTo.ToMatrix3D();
+                else
+                    return local;
+            }
+            else
+                throw new NotImplementedException(string.Format("Placement of type {0} is not implemented", objPlace.GetType().Name));
+        }
+
+        public static XbimMatrix3D ToMatrix3D(this IIfcAxis2Placement placement)
+        {
+            var ax3 = placement as IIfcAxis2Placement3D;
+            var ax2 = placement as IIfcAxis2Placement2D;
+            if (ax3 != null)
+                return ax3.ToMatrix3D();
+            return ax2 != null ? ax2.ToMatrix3D() : XbimMatrix3D.Identity;
+        }
+
+        public static XbimMatrix3D ToMatrix3D(this IIfcAxis2Placement2D placement)
+        {
+            object transform;
+            if (placement.RefDirection != null)
+            {
+                XbimVector3D v = placement.RefDirection.XbimVector3D();
+                v.Normalized();
+                transform = new XbimMatrix3D(v.X, v.Y, 0, 0, v.Y, v.X, 0, 0, 0, 0, 1, 0, placement.Location.X, placement.Location.Y, 0, 1);
+            }
+            else
+                transform = new XbimMatrix3D(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, placement.Location.X, placement.Location.Y,
+                                    placement.Location.Z, 1);
+            return (XbimMatrix3D)transform;
+        }
+
+        public static XbimMatrix3D ToMatrix3D(this IIfcAxis2Placement3D pl)
+        {
+            return pl.ConvertAxis3D();
+        }
+
+        private static XbimMatrix3D ConvertAxis3D(this IIfcAxis2Placement3D pl)
+        {
+            if (pl.RefDirection == null || pl.Axis == null)
+                return new XbimMatrix3D(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, pl.Location.X, pl.Location.Y,
+                    pl.Location.Z, 1);
+
+            var za = pl.Axis.XbimVector3D();
+            za.Normalized();
+            var xa = pl.RefDirection.XbimVector3D();
+            xa.Normalized();
+            var ya = za.CrossProduct(xa);
+            ya.Normalized();
+            return new XbimMatrix3D(xa.X, xa.Y, xa.Z, 0, ya.X, ya.Y, ya.Z, 0, za.X, za.Y, za.Z, 0, pl.Location.X,
+                pl.Location.Y, pl.Location.Z, 1);
+        }
+
+        public static XbimVector3D XbimVector3D(this IIfcDirection dir)
+        {
+            return new XbimVector3D(dir.X, dir.Y, double.IsNaN(dir.Z) ? 0 : dir.Z);
         }
     }
 }

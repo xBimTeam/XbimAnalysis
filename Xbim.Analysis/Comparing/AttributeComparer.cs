@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Xbim.Common;
+using Xbim.Common.Metadata;
 using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Analysis.Comparing
@@ -10,7 +11,7 @@ namespace Xbim.Analysis.Comparing
     {
         private readonly string _attrName;
         private IModel _revModel;
-        private readonly IEnumerable<Type> _possibleTypes;
+        private readonly HashSet<ExpressType> _possibleTypes;
         private readonly HashSet<AttributeHasedRoot> _cache = new HashSet<AttributeHasedRoot>();
 
         public AttributeComparer(string attributeName, IModel revisedModel)
@@ -19,12 +20,11 @@ namespace Xbim.Analysis.Comparing
             _revModel = revisedModel;
 
             //get possible types
-            var rootType = IfcMetaData.IfcType(typeof(IIfcRoot));
-            var rootSubTypes = rootType.NonAbstractSubTypes;
-            _possibleTypes = rootSubTypes.Where(t => IsSimpleValueAttribute(t, attributeName));
+            var rootSubTypes = revisedModel.Metadata.TypesImplementing(typeof(IIfcRoot));
+            _possibleTypes = new HashSet<ExpressType>(rootSubTypes.Where(t => IsSimpleValueAttribute(t, attributeName)));
 
             //get possible objects
-            var possibleObjects = revisedModel.Instances.Where<IIfcRoot>(r => _possibleTypes.Contains(r.GetType()));
+            var possibleObjects = revisedModel.Instances.Where<IIfcRoot>(r => _possibleTypes.Contains(r.ExpressType));
             foreach (var obj in possibleObjects)
             {
                 var inf = obj.GetType().GetProperty(attributeName);
@@ -34,11 +34,11 @@ namespace Xbim.Analysis.Comparing
             }
         }
 
-        private bool IsSimpleValueAttribute(Type type, string attrName)
+        private bool IsSimpleValueAttribute(ExpressType type, string attrName)
         {
-            var propInf = type.GetProperty(attrName);
-            if (propInf == null) return false;
-            var propType = propInf.PropertyType;
+            var prop = type.Properties.FirstOrDefault(p => p.Value.Name == attrName).Value;
+            if (prop == null) return false;
+            var propType = prop.PropertyInfo.PropertyType;
 
             var simple = typeof(IIfcSimpleValue);
             var nonNulType = Nullable.GetUnderlyingType(propType);
@@ -90,9 +90,10 @@ namespace Xbim.Analysis.Comparing
         private HashSet<IIfcRoot> _processed = new HashSet<IIfcRoot>();
         public ComparisonResult Compare<T>(T baseline, IModel revisedModel) where T : IIfcRoot
         {
-            if (!_possibleTypes.Contains(typeof(T))) 
+            var et = revisedModel.Metadata.ExpressType(typeof(T));
+            if (!_possibleTypes.Contains(et)) 
                 return null;
-            var val = baseline.GetType().GetProperty(_attrName).GetValue(baseline, null);
+            var val = et.Properties.FirstOrDefault(p => p.Value.Name == _attrName).Value.PropertyInfo.GetValue(baseline, null);
             if (val == null)
                 return null;
 

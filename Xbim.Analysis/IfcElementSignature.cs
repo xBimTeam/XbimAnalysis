@@ -2,9 +2,8 @@
 using System.Linq;
 using Xbim.Common.Geometry;
 using Xbim.Ifc4.Interfaces;
-using Xbim.Ifc4.Kernel;
 using Xbim.Ifc4.PropertyResource;
-using Xbim.ModelGeometry.Scene;
+using Xbim.Analysis.Extensions;
 
 namespace Xbim.Analysis
 {
@@ -112,7 +111,7 @@ namespace Xbim.Analysis
             IIfcTypeObject ot = elem.GetDefiningType();
             IIfcMaterialSelect material = (elem is IIfcObjectDefinition) ? (elem as IIfcObjectDefinition).Material : null;
             //sort out property definitions
-            List<IIfcPropertySet> psets = elem.GetAllPropertySets();
+            var psets = elem.GetAllPropertySets().ToList();
             PropertyCount = psets.SelectMany(p => p.HasProperties).Count();
             psets.Sort(new PropertySetNameComparer());
             foreach (var pset in psets)

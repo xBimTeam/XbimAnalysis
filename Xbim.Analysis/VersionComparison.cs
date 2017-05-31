@@ -62,7 +62,7 @@ namespace Xbim.Analysis
             }
             else
             {
-                IfcType ot = IfcMetaData.IfcType(filter.ToUpper());
+                var ot = baseline.Metadata.ExpressType(filter.ToUpper());
                 if (ot != null)
                 {
                     if (ot.Type.IsSubclassOf(typeof(IIfcRoot)))

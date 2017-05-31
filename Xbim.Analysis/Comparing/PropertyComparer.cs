@@ -201,8 +201,8 @@ namespace Xbim.Analysis.Comparing
                 if (objDef == null) return false;
 
                 //do the proper equality comparison based on the properties.
-                IItemSet<IIfcPropertySet> set1 = null;
-                IItemSet<IIfcPropertySet> set2 = null;
+                IEnumerable<IIfcPropertySet> set1 = null;
+                IEnumerable<IIfcPropertySet> set2 = null;
 
                 var o2 = objDef.IfcObjectDefinition as IIfcObject;
                 var o1 = _objDef as IIfcObject;
